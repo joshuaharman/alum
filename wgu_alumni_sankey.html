@@ -1,0 +1,457 @@
+
+<style>
+*{box-sizing:border-box;}
+.wgu-header{background:#002855;border-radius:7px 7px 0 0;padding:9px 14px;display:flex;align-items:center;gap:9px;}
+.wgu-wordmark{color:#4A9FD4;font-size:18px;font-weight:700;letter-spacing:0.04em;line-height:1;}
+.wgu-tagline{color:rgba(255,255,255,0.5);font-size:10px;letter-spacing:0.05em;text-transform:uppercase;margin-top:2px;}
+.header-divider{width:1px;height:22px;background:rgba(255,255,255,0.15);margin:0 4px;}
+.header-right{color:rgba(255,255,255,0.75);font-size:12px;line-height:1.4;}
+.controls{display:flex;gap:6px;padding:8px 0 4px;align-items:center;}
+.state-btn{padding:5px 14px;font-size:12px;font-weight:500;border:0.5px solid var(--color-border-secondary);background:transparent;color:var(--color-text-secondary);border-radius:20px;cursor:pointer;transition:all .15s;line-height:1.4;}
+.state-btn.active{background:#002855;color:white;border-color:#002855;}
+.state-btn:hover:not(.active){background:var(--color-background-secondary);}
+.desc{font-size:11px;color:var(--color-text-tertiary);margin-bottom:4px;line-height:1.4;}
+.editor-toggle{display:flex;align-items:center;gap:5px;cursor:pointer;font-size:11px;color:var(--color-text-secondary);padding:7px 0 0;margin-top:3px;border-top:0.5px solid var(--color-border-tertiary);user-select:none;}
+.chevron{width:10px;height:10px;transition:transform .2s;flex-shrink:0;}
+.chevron.open{transform:rotate(180deg);}
+.editor-panel{display:none;margin-top:6px;padding:10px;background:var(--color-background-secondary);border-radius:6px;border:0.5px solid var(--color-border-tertiary);}
+.editor-panel.open{display:block;}
+.editor-section{margin-bottom:8px;}
+.editor-section-title{font-size:10px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;}
+.editor-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:5px;}
+.editor-field{display:flex;flex-direction:column;gap:2px;}
+.editor-label{font-size:10px;color:var(--color-text-secondary);}
+.editor-input{font-size:11px;padding:3px 7px;border:0.5px solid var(--color-border-secondary);border-radius:4px;background:var(--color-background-primary);color:var(--color-text-primary);width:100%;}
+.editor-note{font-size:9px;color:var(--color-text-tertiary);margin-top:3px;font-style:italic;}
+.reset-btn{font-size:10px;padding:3px 10px;border:0.5px solid var(--color-border-secondary);background:transparent;color:var(--color-text-secondary);border-radius:4px;cursor:pointer;margin-top:6px;}
+.reset-btn:hover{background:var(--color-background-secondary);}
+#sankey-container{position:relative;font-size:0;line-height:0;}
+#fw-canvas{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:10;}
+</style>
+
+<div style="max-width:1200px;">
+<div class="wgu-header" role="banner">
+  <svg width="26" height="26" viewBox="0 0 34 34" fill="none" aria-hidden="true">
+    <circle cx="17" cy="17" r="17" fill="#003875"/>
+    <ellipse cx="13" cy="14" rx="3.8" ry="4.4" fill="#4A9FD4"/>
+    <ellipse cx="21" cy="14" rx="3.8" ry="4.4" fill="#4A9FD4"/>
+    <ellipse cx="13" cy="14" rx="2.1" ry="2.6" fill="#002855"/>
+    <ellipse cx="21" cy="14" rx="2.1" ry="2.6" fill="#002855"/>
+    <ellipse cx="13" cy="14" rx="1.1" ry="1.3" fill="#4A9FD4"/>
+    <ellipse cx="21" cy="14" rx="1.1" ry="1.3" fill="#4A9FD4"/>
+    <path d="M13.5 9 Q17 7 20.5 9" stroke="#4A9FD4" stroke-width="1.3" fill="none" stroke-linecap="round"/>
+    <path d="M10.5 11 Q8.5 9.5 9 12" stroke="#4A9FD4" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+    <path d="M23.5 11 Q25.5 9.5 25 12" stroke="#4A9FD4" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+    <path d="M15 17.5 Q17 19.5 19 17.5 Q18 21 17 21.5 Q16 21 15 17.5Z" fill="#4A9FD4"/>
+    <path d="M10.5 17 Q17 23.5 23.5 17" stroke="#4A9FD4" stroke-width="1.1" fill="none" stroke-linecap="round"/>
+  </svg>
+  <div>
+    <div class="wgu-wordmark">WGU</div>
+    <div class="wgu-tagline">Alumni engagement</div>
+  </div>
+  <div class="header-divider"></div>
+  <div class="header-right">Email reachability model &nbsp;<span style="color:rgba(255,255,255,0.4);font-size:10px;">March 2026 baseline</span></div>
+</div>
+
+<div style="padding:0 2px;">
+  <div class="controls">
+    <button class="state-btn active" data-state="current">Current state</button>
+    <button class="state-btn" data-state="mid">Mid-state</button>
+    <button class="state-btn" data-state="future">Future state</button>
+  </div>
+  <div class="desc" id="desc"></div>
+
+  <div id="sankey-container">
+    <canvas id="fw-canvas"></canvas>
+    <div id="sk"></div>
+  </div>
+
+  <div class="editor-toggle" id="editor-toggle">
+    <svg class="chevron" id="chevron" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="2,4 6,8 10,4"/></svg>
+    Adjust numbers to explore scenarios
+  </div>
+  <div class="editor-panel" id="editor-panel">
+    <div class="editor-section">
+      <div class="editor-section-title">Baseline</div>
+      <div class="editor-grid">
+        <div class="editor-field"><label class="editor-label">Total alumni</label><input class="editor-input" data-key="totalAlumni" type="number"></div>
+        <div class="editor-field"><label class="editor-label">In Marketo</label><input class="editor-input" data-key="inMarketo" type="number"></div>
+      </div>
+    </div>
+    <div class="editor-section">
+      <div class="editor-section-title">Current state</div>
+      <div class="editor-grid">
+        <div class="editor-field"><label class="editor-label">Marketable</label><input class="editor-input" data-key="cur_mktable" type="number"></div>
+        <div class="editor-field"><label class="editor-label">Personal email</label><input class="editor-input" data-key="cur_personal" type="number"></div>
+        <div class="editor-field"><label class="editor-label">WGU email</label><input class="editor-input" data-key="cur_wgu" type="number"></div>
+        <div class="editor-field"><label class="editor-label">Opened in 2026</label><input class="editor-input" data-key="cur_opened" type="number"></div>
+      </div>
+    </div>
+    <div class="editor-section">
+      <div class="editor-section-title">Mid-state</div>
+      <div class="editor-grid">
+        <div class="editor-field"><label class="editor-label">Marketable</label><input class="editor-input" data-key="mid_mktable" type="number"></div>
+        <div class="editor-field"><label class="editor-label">Personal email</label><input class="editor-input" data-key="mid_personal" type="number"></div>
+        <div class="editor-field"><label class="editor-label">WGU email</label><input class="editor-input" data-key="mid_wgu" type="number"></div>
+        <div class="editor-field"><label class="editor-label">Opened in 2026</label><input class="editor-input" data-key="mid_opened" type="number"></div>
+      </div>
+    </div>
+    <div class="editor-section">
+      <div class="editor-section-title">Future state</div>
+      <div class="editor-grid">
+        <div class="editor-field"><label class="editor-label">Opened in 2026</label><input class="editor-input" data-key="fut_opened" type="number"></div>
+      </div>
+      <div class="editor-note">Email split derived from mid-state, merged into one personal bucket.</div>
+    </div>
+    <button class="reset-btn" id="reset-btn">Reset to defaults</button>
+  </div>
+</div>
+</div>
+
+<svg id="measure-svg" style="position:absolute;visibility:hidden;pointer-events:none;" width="0" height="0">
+  <text id="measure-text" font-size="11" font-family="sans-serif"></text>
+</svg>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script>
+const fmt = n => Math.round(n).toLocaleString();
+const isDark = matchMedia('(prefers-color-scheme: dark)').meets;
+const textPrimary = isDark ? '#e5e4e0' : '#1a1a1a';
+const textMuted   = isDark ? '#888780' : '#5F5E5A';
+
+const measureEl = document.getElementById('measure-text');
+function measureText(str, size=11, weight=400) {
+  measureEl.setAttribute('font-size', size);
+  measureEl.setAttribute('font-weight', weight);
+  measureEl.textContent = str;
+  try { return measureEl.getBBox().width; } catch(e) { return str.length*5.8; }
+}
+function wrapLabel(label, maxW, size=11) {
+  const words = label.split(' ');
+  const lines = []; let cur = '';
+  for (const w of words) {
+    const test = cur ? cur+' '+w : w;
+    if (measureText(test,size,500) > maxW && cur) { lines.push(cur); cur=w; }
+    else cur=test;
+  }
+  if (cur) lines.push(cur);
+  return lines;
+}
+
+const COLORS = {
+  total:'#D4537E', inMkt:'#6b7280', notMkt:'#9ca3af',
+  mktable:'#378ADD', notMktable:'#85C152',
+  personal:'#1B75BC', wgu:'#F0997B',
+  bucket:'#1B75BC', opened:'#1D9E75', noOpen:'#E24B4A',
+};
+const DEFAULTS = {
+  totalAlumni:427503, inMarketo:371910,
+  cur_mktable:265565, cur_personal:137807, cur_wgu:127758, cur_opened:120724,
+  mid_mktable:305262, mid_personal:158407, mid_wgu:146855, mid_opened:138770,
+  fut_opened:227847,
+};
+let V = {...DEFAULTS};
+
+function buildStates() {
+  const notMkt=V.totalAlumni-V.inMarketo;
+  const cur_notMktable=V.inMarketo-V.cur_mktable;
+  const cur_noOpen=V.cur_mktable-V.cur_opened;
+  const cur_pO=Math.round(V.cur_opened*0.852);
+  const mid_notMktable=V.inMarketo-V.mid_mktable;
+  const mid_noOpen=V.mid_mktable-V.mid_opened;
+  const mid_pO=Math.round(V.mid_opened*0.852);
+  const fut_noOpen=V.mid_mktable-V.fut_opened;
+  return {
+    current:{
+      desc:'March 2026 actuals — 48% of marketable alumni have only a WGU email on file.',
+      diffs:[],
+      nodes:[
+        {id:'total',label:'Total alumni',n:V.totalAlumni,col:0},
+        {id:'inMkt',label:'In Marketo',n:V.inMarketo,col:1},
+        {id:'notMkt',label:'Not in Marketo',n:notMkt,col:1},
+        {id:'mktable',label:'Marketable',n:V.cur_mktable,col:2},
+        {id:'notMktable',label:'Not marketable',n:cur_notMktable,col:2},
+        {id:'personal',label:'Personal email',n:V.cur_personal,col:3},
+        {id:'wgu',label:'WGU email',n:V.cur_wgu,col:3},
+        {id:'opened',label:'Opened in 2026',n:V.cur_opened,col:4},
+        {id:'noOpen',label:'No open in 2026',n:cur_noOpen,col:4},
+      ],
+      links:[
+        {s:'total',t:'inMkt',v:V.inMarketo},{s:'total',t:'notMkt',v:notMkt},
+        {s:'inMkt',t:'mktable',v:V.cur_mktable},{s:'inMkt',t:'notMktable',v:cur_notMktable},
+        {s:'mktable',t:'personal',v:V.cur_personal},{s:'mktable',t:'wgu',v:V.cur_wgu},
+        {s:'personal',t:'opened',v:cur_pO},{s:'personal',t:'noOpen',v:V.cur_personal-cur_pO},
+        {s:'wgu',t:'opened',v:V.cur_opened-cur_pO},{s:'wgu',t:'noOpen',v:V.cur_wgu-(V.cur_opened-cur_pO)},
+      ],
+    },
+    mid:{
+      desc:'Mid-state — ThoughtSpot pipeline applied; personal email share grows, marketable pool expands.',
+      diffs:[{label:`+${fmt(V.mid_opened-V.cur_opened)} (+${((V.mid_opened-V.cur_opened)/V.cur_opened*100).toFixed(1)}%) vs current`,color:'#1D9E75',bg:'#E1F5EE'}],
+      nodes:[
+        {id:'total',label:'Total alumni',n:V.totalAlumni,col:0},
+        {id:'inMkt',label:'In Marketo',n:V.inMarketo,col:1},
+        {id:'notMkt',label:'Not in Marketo',n:notMkt,col:1},
+        {id:'mktable',label:'Marketable',n:V.mid_mktable,col:2},
+        {id:'notMktable',label:'Not marketable',n:mid_notMktable,col:2},
+        {id:'personal',label:'Personal email',n:V.mid_personal,col:3},
+        {id:'wgu',label:'WGU email',n:V.mid_wgu,col:3},
+        {id:'opened',label:'Opened in 2026',n:V.mid_opened,col:4},
+        {id:'noOpen',label:'No open in 2026',n:mid_noOpen,col:4},
+      ],
+      links:[
+        {s:'total',t:'inMkt',v:V.inMarketo},{s:'total',t:'notMkt',v:notMkt},
+        {s:'inMkt',t:'mktable',v:V.mid_mktable},{s:'inMkt',t:'notMktable',v:mid_notMktable},
+        {s:'mktable',t:'personal',v:V.mid_personal},{s:'mktable',t:'wgu',v:V.mid_wgu},
+        {s:'personal',t:'opened',v:mid_pO},{s:'personal',t:'noOpen',v:V.mid_personal-mid_pO},
+        {s:'wgu',t:'opened',v:V.mid_opened-mid_pO},{s:'wgu',t:'noOpen',v:V.mid_wgu-(V.mid_opened-mid_pO)},
+      ],
+    },
+    future:{
+      desc:'Future state — WGU emails converted to personal; all marketable alumni reachable via personal email.',
+      diffs:[
+        {label:`+${fmt(V.fut_opened-V.mid_opened)} (+${((V.fut_opened-V.mid_opened)/V.mid_opened*100).toFixed(1)}%) vs mid`,color:'#1D9E75',bg:'#E1F5EE'},
+        {label:`+${fmt(V.fut_opened-V.cur_opened)} (+${((V.fut_opened-V.cur_opened)/V.cur_opened*100).toFixed(1)}%) vs current`,color:'#0F6E56',bg:'#c8ecdf'},
+      ],
+      nodes:[
+        {id:'total',label:'Total alumni',n:V.totalAlumni,col:0},
+        {id:'inMkt',label:'In Marketo',n:V.inMarketo,col:1},
+        {id:'notMkt',label:'Not in Marketo',n:notMkt,col:1},
+        {id:'mktable',label:'Marketable',n:V.mid_mktable,col:2},
+        {id:'notMktable',label:'Not marketable',n:mid_notMktable,col:2},
+        {id:'personal',label:'Personal email',n:V.mid_personal,col:3},
+        {id:'wgu',label:'WGU → converted',n:V.mid_wgu,col:3},
+        {id:'bucket',label:'Personal email bucket',n:V.mid_mktable,col:4},
+        {id:'opened',label:'Opened in 2026',n:V.fut_opened,col:5},
+        {id:'noOpen',label:'No open in 2026',n:fut_noOpen,col:5},
+      ],
+      links:[
+        {s:'total',t:'inMkt',v:V.inMarketo},{s:'total',t:'notMkt',v:notMkt},
+        {s:'inMkt',t:'mktable',v:V.mid_mktable},{s:'inMkt',t:'notMktable',v:mid_notMktable},
+        {s:'mktable',t:'personal',v:V.mid_personal},{s:'mktable',t:'wgu',v:V.mid_wgu},
+        {s:'personal',t:'bucket',v:V.mid_personal},{s:'wgu',t:'bucket',v:V.mid_wgu},
+        {s:'bucket',t:'opened',v:V.fut_opened},{s:'bucket',t:'noOpen',v:fut_noOpen},
+      ],
+    },
+  };
+}
+
+function computeLayout(nodes, links) {
+  const W=600,H=320,PAD_H=12,PAD_V=14,NW=12,GAP=8;
+  const cols=d3.max(nodes,d=>d.col)+1;
+  const colW=(W-PAD_H*2-NW)/(cols-1);
+  const LBL_W=115;
+  const byId={};
+  nodes.forEach(n=>{byId[n.id]={...n,inLinks:[],outLinks:[]};});
+  links.forEach(l=>{
+    const lk={src:byId[l.s],tgt:byId[l.t],v:l.v,sy0:0,sy1:0,ty0:0,ty1:0};
+    byId[l.s].outLinks.push(lk); byId[l.t].inLinks.push(lk);
+  });
+  const colGroups={};
+  nodes.forEach(n=>{if(!colGroups[n.col]) colGroups[n.col]=[];colGroups[n.col].push(byId[n.id]);});
+  const rootFlow=d3.sum(byId['total'].outLinks,l=>l.v);
+  const scale=(H-PAD_V*2)/rootFlow;
+  Object.values(colGroups).forEach(group=>{
+    const totalH=d3.sum(group,n=>n.n)*scale+GAP*(group.length-1);
+    let y=PAD_V+(H-PAD_V*2-totalH)/2;
+    group.forEach(n=>{
+      const h=Math.max(2,n.n*scale);
+      n.x0=PAD_H+n.col*colW; n.x1=n.x0+NW;
+      n.y0=y; n.y1=y+h; y+=h+GAP;
+    });
+  });
+  Object.values(byId).forEach(n=>{
+    let sy=n.y0,ty=n.y0;
+    n.outLinks.forEach(l=>{l.sy0=sy;l.sy1=sy+l.v*scale;sy=l.sy1;});
+    n.inLinks.forEach(l=>{l.ty0=ty;l.ty1=ty+l.v*scale;ty=l.ty1;});
+  });
+  return {nodeList:Object.values(byId),linkList:Object.values(byId).flatMap(n=>n.outLinks),W,H,colW,LBL_W};
+}
+
+function linkPath(l){
+  const x0=l.src.x1,x1=l.tgt.x0,mx=(x0+x1)/2;
+  return `M${x0},${l.sy0} C${mx},${l.sy0} ${mx},${l.ty0} ${x1},${l.ty0} L${x1},${l.ty1} C${mx},${l.ty1} ${mx},${l.sy1} ${x0},${l.sy1} Z`;
+}
+
+function fireFireworks(svgEl) {
+  const container=document.getElementById('sankey-container');
+  const canvas=document.getElementById('fw-canvas');
+  const w=container.offsetWidth, h=container.offsetHeight;
+  canvas.width=w; canvas.height=h;
+  const ctx=canvas.getContext('2d');
+  const FW_COLORS=['#4A9FD4','#1D9E75','#FFD700','#F0997B','#ffffff','#D4537E','#85C152','#FF6B6B'];
+  const particles=[];
+
+  function burst(cx,cy){
+    for(let i=0;i<110;i++){
+      const angle=Math.random()*Math.PI*2, speed=Math.random()*7+2;
+      particles.push({x:cx,y:cy,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed-Math.random()*3,
+        alpha:1,color:FW_COLORS[Math.floor(Math.random()*FW_COLORS.length)],
+        size:Math.random()*2.5+1,decay:Math.random()*0.018+0.012,gravity:0.16+Math.random()*0.1,trail:[]});
+    }
+  }
+
+  const rect=svgEl.getBoundingClientRect();
+  const cr=container.getBoundingClientRect();
+  const cx=rect.right-cr.left-15;
+  const cy=rect.top-cr.top+rect.height*0.25;
+  burst(cx, cy);
+  setTimeout(()=>burst(cx-40, cy-15), 160);
+  setTimeout(()=>burst(cx+10, cy+20), 300);
+
+  function animate(){
+    ctx.clearRect(0,0,w,h);
+    let alive=false;
+    for(const p of particles){
+      if(p.alpha<=0) continue;
+      alive=true;
+      p.trail.push({x:p.x,y:p.y});
+      if(p.trail.length>5) p.trail.shift();
+      p.x+=p.vx; p.y+=p.vy; p.vy+=p.gravity; p.vx*=0.98; p.alpha-=p.decay;
+      for(let t=0;t<p.trail.length;t++){
+        ctx.beginPath(); ctx.arc(p.trail[t].x,p.trail[t].y,p.size*0.5,0,Math.PI*2);
+        ctx.fillStyle=p.color; ctx.globalAlpha=p.alpha*(t/p.trail.length)*0.35; ctx.fill();
+      }
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2);
+      ctx.fillStyle=p.color; ctx.globalAlpha=Math.max(0,p.alpha); ctx.fill();
+    }
+    ctx.globalAlpha=1;
+    if(alive) requestAnimationFrame(animate);
+    else ctx.clearRect(0,0,w,h);
+  }
+  animate();
+}
+
+let currentState='current';
+
+function render(stateKey) {
+  currentState=stateKey;
+  const states=buildStates();
+  const state=states[stateKey];
+  document.getElementById('desc').textContent=state.desc;
+
+  const {nodeList,linkList,W,H,colW,LBL_W}=computeLayout(state.nodes,state.links);
+  const FS=11,LH=14,LH_DIFF=16;
+  const LBL_AVAIL=LBL_W-6;
+  const svgW=W+LBL_W+10;
+  const svgH=H;
+
+  const wrap=document.getElementById('sk');
+  wrap.innerHTML='';
+
+  const outer=document.getElementById('sankey-container');
+
+  const svg=d3.select(wrap).append('svg')
+    .attr('viewBox',`0 0 ${svgW} ${svgH}`)
+    .attr('width','100%')
+    .style('display','block');
+
+  svg.append('g').selectAll('path')
+    .data(linkList).join('path')
+    .attr('d',linkPath)
+    .attr('fill',l=>COLORS[l.src.id]||'#888')
+    .attr('fill-opacity',0.22)
+    .attr('stroke','none');
+
+  const nodeG=svg.append('g').selectAll('g')
+    .data(nodeList).join('g');
+
+  nodeG.append('rect')
+    .attr('x',d=>d.x0).attr('y',d=>d.y0)
+    .attr('width',d=>d.x1-d.x0)
+    .attr('height',d=>Math.max(2,d.y1-d.y0))
+    .attr('fill',d=>COLORS[d.id]||'#888')
+    .attr('rx',2);
+
+  nodeG.each(function(d){
+    const g=d3.select(this);
+    const lx=d.x1+5;
+    const lines=wrapLabel(d.label,LBL_AVAIL,FS);
+    const isClickable=stateKey==='future'&&d.id==='opened';
+    const hasDiffs=d.id==='opened'&&state.diffs.length>0;
+    const lc=isClickable?'#1D9E75':textPrimary;
+
+    const totalH=lines.length*LH+LH+(hasDiffs?state.diffs.length*LH_DIFF+4:0)+(isClickable?LH+2:0);
+    const midY=(d.y0+d.y1)/2;
+    const startY=midY-totalH/2;
+
+    lines.forEach((line,i)=>{
+      g.append('text')
+        .attr('x',lx).attr('y',startY+i*LH)
+        .attr('font-size',FS).attr('font-weight',500)
+        .attr('font-family','var(--font-sans,sans-serif)')
+        .attr('fill',lc).attr('dominant-baseline','hanging')
+        .text(line);
+    });
+
+    let cy=startY+lines.length*LH;
+    g.append('text')
+      .attr('x',lx).attr('y',cy)
+      .attr('font-size',FS).attr('font-weight',isClickable?700:400)
+      .attr('font-family','var(--font-sans,sans-serif)')
+      .attr('fill',isClickable?'#1D9E75':textMuted)
+      .attr('dominant-baseline','hanging')
+      .text(fmt(d.n));
+    cy+=LH+2;
+
+    if(hasDiffs){
+      state.diffs.forEach((df,i)=>{
+        const tw=measureText(df.label,9,500);
+        g.append('rect')
+          .attr('x',lx-2).attr('y',cy+i*LH_DIFF-1)
+          .attr('width',Math.min(tw+10,LBL_AVAIL+4)).attr('height',13)
+          .attr('rx',3).attr('fill',df.bg).attr('stroke',df.color).attr('stroke-width',0.5);
+        g.append('text')
+          .attr('x',lx+1).attr('y',cy+i*LH_DIFF+5.5)
+          .attr('font-size',9).attr('font-weight',500)
+          .attr('font-family','var(--font-sans,sans-serif)')
+          .attr('fill',df.color).attr('dominant-baseline','middle')
+          .text(df.label);
+      });
+      cy+=state.diffs.length*LH_DIFF+4;
+    }
+
+    if(isClickable){
+      g.append('text')
+        .attr('x',lx).attr('y',cy)
+        .attr('font-size',9).attr('font-style','italic')
+        .attr('font-family','var(--font-sans,sans-serif)')
+        .attr('fill','#1D9E75').attr('opacity',0.65)
+        .attr('dominant-baseline','hanging')
+        .text('click to celebrate');
+
+      const hitH=totalH+LH+4;
+      g.append('rect')
+        .attr('x',lx-2).attr('y',startY-2)
+        .attr('width',LBL_AVAIL+4).attr('height',hitH)
+        .attr('fill','transparent')
+        .attr('cursor','pointer')
+        .on('click', function(){
+          const svgEl=document.querySelector('#sk svg');
+          fireFireworks(svgEl);
+        });
+    }
+  });
+}
+
+function populateInputs(){
+  document.querySelectorAll('.editor-input').forEach(inp=>{inp.value=V[inp.dataset.key];});
+}
+populateInputs();
+render('current');
+
+
+document.querySelectorAll('.state-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.state-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');render(btn.dataset.state);
+  });
+});
+document.getElementById('editor-toggle').addEventListener('click',()=>{
+  document.getElementById('editor-panel').classList.toggle('open');
+  document.getElementById('chevron').classList.toggle('open');
+});
+document.querySelectorAll('.editor-input').forEach(inp=>{
+  inp.addEventListener('input',()=>{V[inp.dataset.key]=parseInt(inp.value)||0;render(currentState);});
+});
+document.getElementById('reset-btn').addEventListener('click',()=>{V={...DEFAULTS};populateInputs();render(currentState);});
+</script>
